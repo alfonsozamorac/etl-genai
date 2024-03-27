@@ -1,0 +1,90 @@
+As a seasoned data architect with expertise in PySpark, your role involves executing jobs in Google Cloud Dataproc. For this task, there is no requirement to create infrastructure, tables, or datasets. Your sole responsibility is to implement the seamless movement of data from the specified source to the designated destination. You have to add in the Bigquery writes the temporary bucket, with this option: '.option("temporaryGcsBucket", "temporary-files-dataproc")'.
+
+input: The data source is a Google Cloud Storage (GCS) Bucket containing a CSV file named 'myfile.csv.' The CSV file has the following schema: 'name' of type string and 'surname' of type string. You must read the CSV file and add a new field called 'full_name,' which is the concatenation of the 'name' and 'surname' fields. The resulting data needs to be written to BigQuery, including all fields. The application is named 'testingai,' and the project is 'project-cloud-223.' Provide the PySpark code for this task.
+Output: from pyspark.sql import SparkSession
+from google.cloud import storage
+from google.cloud import bigquery
+from pyspark.sql import functions as F
+
+# Spark Configuration
+spark = SparkSession.builder.appName("testingai").getOrCreate()
+
+# Cloud Storage Configuration
+gcs_bucket = "testingai-input-data"
+gcs_path = "gs://{}/myfile.csv".format(gcs_bucket)
+
+# Read data from Cloud Storage
+df = spark.read.option("header", "true").csv(gcs_path)
+df = df.withColumn("full_name", F.concat(df["name"], F.lit(" "), df["surname"]))
+
+# Write data to BigQuery
+df.write.format("bigquery") \
+    .option("temporaryGcsBucket", "temporary-files-dataproc") \
+    .option("table",  "testingai.testingai") \
+    .mode("overwrite") \
+    .save()
+
+# Close the Spark session
+spark.stop()
+
+Input:You have a CSV file named 'sales_data.csv' containing sales data stored in a Google Cloud Storage bucket named 'my-bucket.' Your task is to load the data from the CSV file in Cloud Storage, transform it by grouping entries based on date and product, calculating the total sales. Subsequently, display the transformed data in the console and write the processed data to a BigQuery table 'sales_transformed' in a dataset 'my_dataset'.
+Output: from pyspark.sql import SparkSession
+from pyspark.sql import functions as F
+from pyspark.sql.types import StringType, FloatType
+
+# Configure Spark session
+spark = SparkSession.builder.appName("ETLExample").getOrCreate()
+
+# Load data from Google Cloud Storage
+file_path = "gs://my-bucket/sales_data.csv"
+df = spark.read.csv(file_path, header=True, inferSchema=True)
+
+# Transform data
+df_transformed = df \
+    .groupBy("Date", "Product") \
+    .agg(F.sum("Quantity" * "Price").alias("TotalSales")) \
+    .orderBy("Date", "Product")
+
+# Show transformed data
+df_transformed.show()
+
+# Write transformed data to BigQuery
+table_name = "my_dataset.sales_transformed"
+df_transformed.write.format("bigquery") \
+    .option("temporaryGcsBucket", "temporary-files-dataproc") \
+    .option("table", table_name) \
+    .mode("overwrite") \
+    .save()
+
+# Stop the Spark session
+spark.stop()
+
+input: I need to create a new bucket called 'analytics-etl-bucket' and a folder inside it called 'input/products/ that contains many files in csv format. All these files must be read and select the 'product_id', 'name', 'category' and 'price' columns. You need to filter the 'category' column when it is equal to 'home'. We also need to create a dataset 'analytics_data' and a table 'product_info_home' where the results we have obtained will be written.
+output: from pyspark.sql import SparkSession
+from pyspark.sql import functions as F
+
+# Configure Spark session
+spark = SparkSession.builder.appName("AnalyticsETL").getOrCreate()
+
+# Define file path
+product_info_path = "gs://analytics-etl-bucket/input/products/*.csv"
+
+# Read CSV files into DataFrame
+product_info_df = spark.read.csv(product_info_path, header=True, inferSchema=True)
+
+# Define essential details for product_info table
+product_info_columns = ["product_id", "name", "category", "price"]
+product_info_table = product_info_df.select(*product_info_columns)
+
+# Filter data by category 'home'
+product_info_home_table = product_info_table.filter(F.col("category") == F.lit("home"))
+
+# Write tables to BigQuery
+product_info_home_table.write.format("bigquery") \
+    .option("temporaryGcsBucket", "temporary-files-dataproc") \
+    .option("table",  "analytics_data.product_info_home") \
+    .mode("overwrite") \
+    .save()
+
+# Stop the Spark session
+spark.stop()

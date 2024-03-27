@@ -1,0 +1,330 @@
+You are an expert in terraform deployments, you will be able to deploy services in GCP as GCS and Bigquery. You may not always have to deploy either of the two services, as long as they tell you that a bucket or table already exists that already does that function. It is important that ETL will be with Dataproc, then It is not necessary to create jobs in bigquery and dataproc either, You only have to create folders and buckets in GCS and Dataset and tables in Bigquery. You should always create the 'temporary_files' resource.
+
+input: I need to read a file named `myfile.csv` inside the folder `data/input` in a bucket called `application-data-input`, and I need to create a new dataset and table in BigQuery called `tst_tf_ai`. The process has to read the file, remove the first three characters of the name, and write the result in BigQuery. The schema of the table will be 'name' of String type and 'surname' of String type. The infrastructure has to be deployed in the project `project-cloud-223` in GCP, and region `europe-southwest1`.
+output: ```hcl
+terraform {
+ required_version = ">= 0.15"
+ required_providers {
+  google = "~> 5.0"
+ }
+}
+
+resource "google_storage_bucket" "temporary_files" { 
+ project       = "project-cloud-223" 
+ name          = "temporary-files-dataproc" 
+ location      = "europe-southwest1" 
+ force_destroy = true 
+} 
+
+resource "google_storage_bucket" "bucket1" { 
+ project       = "project-cloud-223" 
+ name          = "application-data-input" 
+ location      = "europe-southwest1" 
+ force_destroy = true 
+} 
+
+resource "google_storage_bucket_object" "folder1" {
+ name    = "data/input/"
+ bucket  = google_storage_bucket.bucket1.name
+ content = " "
+}
+
+resource "google_bigquery_dataset" "dataset" { 
+ project       = "project-cloud-223" 
+ dataset_id    = "tst_tf_ai" 
+ friendly_name = "tst_tf_ai" 
+ description   = "Description" 
+ location      = "europe-southwest1" 
+} 
+
+resource "google_bigquery_table" "table" { 
+ project              = "project-cloud-223" 
+ dataset_id           = google_bigquery_dataset.dataset.dataset_id 
+ deletion_protection  = false
+ table_id             = "tst_tf_ai" 
+ schema               = <<EOF
+[ 
+ { 
+  "name": "name", 
+  "type": "STRING", 
+  "mode": "NULLABLE", 
+  "description": "The name" 
+ }, 
+ { 
+  "name": "surname", 
+  "type": "STRING", 
+  "mode": "NULLABLE", 
+  "description": "The surname" 
+ }
+] 
+EOF 
+} 
+```
+
+input: I need to read a file named `myfile.csv` inside a new bucket called `myinputbucket`, and I need to transform the height in cm because it is in inches and filter the employees with status `FIRED`. Insert the data inside a table called `mydataset.mytable` that already exists. The schema of the table will be employee of String type and height of type Integer. The infrastructure has to be deployed in the project `newproject` in GCP, and region `europe-west4`.
+output: ```hcl
+terraform {
+ required_version = ">= 0.15"
+ required_providers {
+  google = "~> 5.0"
+ }
+}
+
+resource "google_storage_bucket" "temporary_files" { 
+ project       = "project-cloud-223" 
+ name          = "temporary-files-dataproc" 
+ location      = "europe-west4" 
+ force_destroy = true 
+} 
+
+resource "google_storage_bucket" "bucket1" { 
+ project       = "newproject" 
+ name          = "myinputbucket" 
+ location      = "europe-west4" 
+ force_destroy = true 
+}
+```
+
+input: I need to read a file named `myfile.csv` inside the folder `data/input` in a new bucket called `application-data-input`, and I have a dataset and table in BigQuery called `tst_tf_ai` that already exists. The process has to read the file, remove the first three characters of the name, and write the result in BigQuery. The schema of the table will be ‘name’ of String type and ‘surname’ of String type. The infrastructure has to be deployed in the project `project-cloud-223` in GCP, and region `europe-southwest1`.
+output: ```hcl
+terraform {
+ required_version = ">= 0.15"
+ required_providers {
+  google = "~> 5.0"
+ }
+}
+resource "google_storage_bucket" "temporary_files" { 
+ project       = "project-cloud-223" 
+ name          = "temporary-files-dataproc" 
+ location      = "europe-southwest1" 
+ force_destroy = true 
+} 
+
+resource "google_storage_bucket" "bucket1" { 
+ project       = "project-cloud-223" 
+ name          = "application-data-input" 
+ location      = "europe-southwest1" 
+ force_destroy = true 
+} 
+
+resource "google_storage_bucket_object" "folder1" {
+ name    = "data/input/"
+ bucket  = google_storage_bucket.bucket1.name
+ content = " "
+}
+```
+
+input: I need to read a file named `mynewfile.csv` inside the folder `folder/name/` in a new bucket called `myinputbucket`, and I need to create a new dataset `tst_tf_ai_dts` and table `tst_tf_ai_tbl` in BigQuery. The input data do not require any transform. The schema of the table will be ‘employee’ of String type and ‘company’ of String type, ‘labor_old’ of type Integer, and ‘city’ of String type. The infrastructure has to be deployed in the project `project2024` in GCP, and region `europe-west1`.
+output: ```hcl
+terraform {
+ required_version = ">= 0.15"
+ required_providers {
+  google = "~> 5.0"
+ }
+}
+
+resource "google_storage_bucket" "temporary_files" { 
+ project       = "project2024" 
+ name          = "temporary-files-dataproc" 
+ location      = "europe-west1" 
+ force_destroy = true 
+} 
+
+resource "google_storage_bucket" "bucket1" { 
+ project       = "project2024" 
+ name          = "myinputbucket" 
+ location      = "europe-west1" 
+ force_destroy = true 
+} 
+
+resource "google_storage_bucket_object" "folder1" {
+ name    = "folder/name/"
+ bucket  = google_storage_bucket.bucket1.name
+ content = " "
+}
+
+resource "google_bigquery_dataset" "dataset" { 
+ project       = "project2024" 
+ dataset_id    = "tst_tf_ai_dts" 
+ friendly_name = "tst_tf_ai_dts" 
+ description   = "Description" 
+ location      = "europe-west1" 
+} 
+
+resource "google_bigquery_table" "table" { 
+ project              = "project2024" 
+ dataset_id           = google_bigquery_dataset.dataset.dataset_id 
+ deletion_protection  = false
+ table_id             = "tst_tf_ai_tbl" 
+ schema               = <<EOF
+[ 
+ { 
+  "name": "employee", 
+  "type": "STRING", 
+  "mode": "NULLABLE", 
+  "description": "The employee" 
+ }, 
+ { 
+  "name": "company", 
+  "type": "STRING", 
+  "mode": "NULLABLE", 
+  "description": "The company" 
+ },
+ { 
+  "name": "labor_old", 
+  "type": "INTEGER", 
+  "mode": "NULLABLE", 
+  "description": "The labor old" 
+ }, 
+ { 
+  "name": "city", 
+  "type": "STRING", 
+  "mode": "NULLABLE", 
+  "description": "The city" 
+ }
+] 
+EOF 
+} 
+```
+
+input: The source of the data will be a two GCS Bucket have has to be created, one bucket called parquetdatpc-input1 with one CSV file called Organization_v2.csv, and another one called parquetdatpc-input2 with a folder called inputadata/ and inside a file called Order_v3.csv. You need to join the inputs by organizationIdentifier field, and get the number of orderIdentifier grouping by orderType calling it count_orders, and order them descendant. To write the data, we are going to do it in a new bigquery table 'dtsjoindpc.tbljoindpc' with the fields organizationIdentifier renamed as organization_identifier, orderType ranamed as order_type and count_orders. The name of the application is joindpc and the project project-cloud-223.
+output: ```hcl
+terraform {
+ required_version = ">= 0.15"
+ required_providers {
+  google = "~> 5.0"
+ }
+}
+
+resource "google_storage_bucket" "temporary_files" { 
+ project       = "project-cloud-223" 
+ name          = "temporary-files-dataproc" 
+ location      = "europe-west1" 
+ force_destroy = true 
+} 
+
+resource "google_storage_bucket" "bucket1" {
+  project  = "project-cloud-223"
+  name     = "parquetdatpc-input1"
+  location = "europe-west1"
+}
+
+resource "google_storage_bucket" "bucket2" {
+  project  = "project-cloud-223"
+  name     = "parquetdatpc-input2"
+  location = "europe-west1"
+}
+
+resource "google_storage_bucket_object" "folder2" {
+  name    = "inputadata/"
+  bucket  = google_storage_bucket.bucket2.name
+  content = " "
+}
+
+resource "google_bigquery_dataset" "dataset" {
+  project       = "project-cloud-223"
+  dataset_id    = "dtsjoindpc"
+  friendly_name = "dtsjoindpc"
+  description   = "Description"
+  location      = "europe-west1"
+}
+
+resource "google_bigquery_table" "table" {
+  project              = "project-cloud-223"
+  dataset_id           = google_bigquery_dataset.dataset.dataset_id
+  deletion_protection  = false
+  table_id             = "tbljoindpc"
+  schema               = <<EOF
+[
+  {
+    "name": "organization_identifier",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "The organization identifier"
+  },
+  {
+    "name": "order_type",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "The order type"
+  },
+  {
+    "name": "count_orders",
+    "type": "INTEGER",
+    "mode": "NULLABLE",
+    "description": "The count of orders"
+  }
+]
+EOF
+}
+```
+
+input: The sources of data will be 3 buckets, each with a folder called "item_n" with n from 1 to 3, each of them will have their own files called "pagos_n.csv". You need to join the inputs by "payout" field and dump the results in a bq table called "item.tabla1". The project is project-cloud-225.
+output: ```hcl
+terraform {
+  required_version = ">= 0.15"
+  required_providers {
+    google = "~> 5.0"
+  }
+}
+
+locals {
+  iterator = {
+    "bucket1" = "item_1",
+    "bucket2" = "item_2",
+    "bucket3" = "item_3"
+  }
+}
+
+resource "google_storage_bucket" "temporary_files" { 
+ project       = "project-cloud-225" 
+ name          = "temporary-files-dataproc" 
+ location      = "europe-west1" 
+ force_destroy = true 
+} 
+
+resource "google_storage_bucket" "buckets" {
+  for_each = local.iterator
+  project  = "project-cloud-225"
+  name     = each.value
+  location = "europe-west1"
+}
+
+resource "google_storage_bucket_object" "folders" {
+  for_each = local.iterator
+  name     = "${each.value}/"
+  bucket   = google_storage_bucket.buckets[each.key].name
+  content  = " "
+}
+
+resource "google_bigquery_dataset" "dataset" {
+  project       = "project-cloud-225"
+  dataset_id    = "item"
+  friendly_name = "item"
+  description   = "Description"
+  location      = "europe-west1"
+}
+
+resource "google_bigquery_table" "table" {
+  project              = "project-cloud-225"
+  dataset_id           = google_bigquery_dataset.dataset.dataset_id
+  deletion_protection  = false
+  table_id             = "tabla1"
+  schema               = <<EOF
+[
+  {
+    "name": "payout",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "The payout"
+  },
+  {
+    "name": "value",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "The value"
+  }
+]
+EOF
+}
+```
